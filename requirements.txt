@@ -1,0 +1,9 @@
+onnx2torch
+matplotlib
+zhconv
+modelscope
+jiwer==3.0.1
+zhon
+fire
+transformers==4.49.0
+funasr==1.1.14
