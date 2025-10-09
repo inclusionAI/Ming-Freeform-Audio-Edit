@@ -1,4 +1,4 @@
-set -x
+#!/usr/bin/env python
 
 meta_lst=$1
 wav_dir=$2
@@ -6,6 +6,10 @@ checkpoint_path=$3
 jobs=$4
 result_dir=$5
 lang=$6
+
+export LD_LIBRARY_PATH=""
+
+[ -d "$result_dir" ] || mkdir -p "$result_dir"
 
 wav_wav_text=$result_dir/wav_res_ref_text
 score_file=$result_dir/wav_res_ref_text.sim.${lang}
@@ -19,7 +23,7 @@ else
 fi
 
 
-workdir=$(cd $(dirname $0); cd ../../; pwd)
+workdir=$(cd $(dirname $0); cd ../; pwd)
 
 cd $workdir/thirdparty/UniSpeech/downstreams/speaker_verification/
 

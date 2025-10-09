@@ -1,6 +1,3 @@
-# Author: wanren
-# Email: wanren.pj@antgroup.com
-# Date: 2025/9/16
 import base64
 import copy
 import json
@@ -15,8 +12,8 @@ class GeminiApi:
     headers = {
         "Content-Type": "application/json",
         # 你需要添加自己的api key
-        "Authorization": os.environ.get("Authorization", ""),
-        "Cookie": os.environ.get("Cookie", ""),
+        "Authorization": os.environ.get("Authorization", "Bearer sk-534795129feb499d9d1830b52855f5c0"),
+        "Cookie": os.environ.get("Cookie", "BUSERVICE_SSO_V2=48E33714350DF05965CDB7629A5499D9A846057358AB451D763150F8862ED02CD543B154FDD2852554399BC579F55FA7; spanner=r1rO+AB9cjpxmxlr/86q+/+ZZyZeB1kt4EJoL7C0n0A="),
     }
 
     payload = {

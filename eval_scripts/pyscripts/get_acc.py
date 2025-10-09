@@ -1,7 +1,5 @@
 import argparse
 import difflib
-import json
-import pprint
 import re
 
 
@@ -246,14 +244,25 @@ def process_del(input_path, ref_file, hyp_file, wav_asr_text):
         hyp_file, "w", encoding="utf-8"
     ) as outfile2:
         for line in fn:
-            data = json.loads(line)
+            data = {}
+            d_uid, d_path, d_ins, d_asr_text, d_edited_text_label = line.strip().split("|")
+            if d_uid == "file_name":
+                continue
+            else:
+                data["uid"] = d_uid
+                data["asr_text"] = d_asr_text
+                data["asr_label"] = d_asr_text
+                data["edited_text_label"] = d_edited_text_label
+                data["instruction"] = d_ins
             uid = data["uid"]
             instruction = data["instruction"]
             # print(instruction, data['asr_label'], data['edited_text'])
             if wav_asr_text is not None and uid in uid2asr:
                 res = validate_del(instruction, data["asr_label"], uid2asr[uid])
             else:
-                res = validate_del(instruction, data["asr_label"], data["edited_text"])
+                # res = validate_del(instruction, data["asr_label"], data["edited_text"])
+                print(f"{data} miss something")
+                continue
             # print(res)
             if res[0] == 1:
                 acc = acc + 1
@@ -272,7 +281,16 @@ def process_log_file(input_path, wer_txt_file, ref_file, hyp_file, task):
         hyp_file, "w", encoding="utf-8"
     ) as outfile2:
         for line in fn:
-            data = json.loads(line)
+            data = {}
+            d_uid, d_path, d_ins, d_asr_text, d_edited_text_label = line.strip().split("|")
+            if d_uid == "file_name":
+                continue
+            else:
+                data["uid"] = d_uid
+                data["asr_text"] = d_asr_text
+                data["asr_label"] = d_asr_text
+                data["edited_text_label"] = d_edited_text_label
+                data["instruction"] = d_ins
             if data["uid"] in parsed_results:
                 if task == "sub":
                     if "And substitute the characters or words" in data["instruction"]:
@@ -475,7 +493,16 @@ def process_en(input_path, wer_txt_file, ref_file, hyp_file, task, lang):
         hyp_file, "w", encoding="utf-8"
     ) as outfile2:
         for line in fn:
-            data = json.loads(line)
+            data = {}
+            d_uid, d_path, d_ins, d_asr_text, d_edited_text_label = line.strip().split("|")
+            if d_uid == "file_name":
+                continue
+            else:
+                data["uid"] = d_uid
+                data["asr_text"] = d_asr_text
+                data["asr_label"] = d_asr_text
+                data["edited_text_label"] = d_edited_text_label
+                data["instruction"] = d_ins
             if data["uid"] in parsed_results:
                 if task == "sub":
                     res = validate_sub_open(
