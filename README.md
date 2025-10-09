@@ -53,6 +53,7 @@ git clone https://github.com/inclusionAI/Ming-Freeform-Audio-Edit.git
 cd Ming-Freeform-Audio-Edit
 pip install -r requirements.txt
 ```
+**Note**: Please download the audio and meta files from [HuggingFace](https://huggingface.co/datasets/inclusionAI/Ming-Freeform-Audio-Edit-Benchmark/tree/main) or [ModelScope](https://modelscope.cn/datasets/inclusionAI/Ming-Freeform-Audio-Edit-Benchmark/files) and put the `wavs` and `meta` directories under `Ming-Freeform-Audio-Edit`
 ### Semantic Editing
 For the deletion, insertion, and substitution tasks, we evaluate the performance using four key metrics:
 + Word Error Rate (WER) of the Edited Region (wer)
