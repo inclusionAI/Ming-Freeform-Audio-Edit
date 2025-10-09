@@ -23,6 +23,11 @@ f = open(args.pair)
 lines = f.readlines()
 f.close()
 
+current_script_dir = os.path.dirname(os.path.abspath(__file__))
+relative_path_to_target = "../../../.."
+target_wavs_dir = os.path.abspath(os.path.join(current_script_dir, relative_path_to_target))
+
+
 tsv1 = []
 tsv2 = []
 for line in lines:
@@ -39,7 +44,12 @@ score_list = []
 for t1, t2 in tqdm.tqdm(zip(tsv1, tsv2), total=len(tsv1)):
     t1_path = t1.strip()
     t2_path = t2.strip()
+    t2_path = os.path.abspath(os.path.join(target_wavs_dir, t2_path))
     if not os.path.exists(t1_path) or not os.path.exists(t2_path):
+        if not os.path.exists(t1_path):
+            print(f"WARNING! {t1_path} not exists")
+        else:
+            print(f"WARNING! {t2_path} not exists")
         continue
     try:
         sim, model = verification(args.model_name, t1_path, t2_path, use_gpu=True, checkpoint=args.checkpoint, wav1_start_sr=args.wav1_start_sr, wav2_start_sr=args.wav2_start_sr, wav1_end_sr=args.wav1_end_sr, wav2_end_sr=args.wav2_end_sr, model=model, wav2_cut_wav1=args.wav2_cut_wav1, device=args.device)
@@ -50,9 +60,7 @@ for t1, t2 in tqdm.tqdm(zip(tsv1, tsv2), total=len(tsv1)):
     if sim is None:
         continue
     scores_w.write(f'{t1_path}_{args.wav1_start_sr}_{args.wav1_end_sr}|{t2_path}_{args.wav2_start_sr}_{args.wav2_end_sr}\t{sim.cpu().item()}\n')
-    # print(f'{t1_path}_{args.wav1_start_sr}_{args.wav1_end_sr}|{t2_path}_{args.wav2_start_sr}_{args.wav2_end_sr}\t{sim.cpu().item()}')
     score_list.append(sim.cpu().item())
     scores_w.flush()
 scores_w.write(f'avg score: {sum(score_list)/len(score_list)}')
 scores_w.flush()
-# print(f'avg score: {round(sum(score_list)/len(score_list), 3)}')
