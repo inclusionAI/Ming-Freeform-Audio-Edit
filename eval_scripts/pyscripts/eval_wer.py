@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # ****************************************************************#
 # ScriptName: local/eval_wer.py
 # Author: $SHTERM_REAL_USER@alibaba-inc.com
@@ -7,7 +7,6 @@
 # Modify Date: 2025-06-16 11:37
 # Function:
 # ***************************************************************#
-#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import argparse
@@ -15,7 +14,6 @@ import codecs
 import json
 import logging
 import os
-import pdb
 import re
 import sys
 import unicodedata

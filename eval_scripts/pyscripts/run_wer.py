@@ -1,10 +1,7 @@
-import multiprocessing
 import os
 import string
 import sys
 
-import ipdb
-import numpy as np
 import scipy
 import soundfile as sf
 import zhconv
@@ -20,20 +17,20 @@ wav_res_text_path = sys.argv[1]
 res_path = sys.argv[2]
 lang = sys.argv[3]  # zh or en
 task = sys.argv[4]  # asr or wer only
-
+whisper_path = sys.argv[5]
+paraformer_path = sys.argv[6]
 device = "cuda:0"
 
 
-def load_en_model():
-    model_id = "/mnt3/weiyi.wyf/Models/openai-whisper-large-v3"
+def load_en_model(model_id):
     processor = WhisperProcessor.from_pretrained(model_id)
     model = WhisperForConditionalGeneration.from_pretrained(model_id).to(device)
     return processor, model
 
 
-def load_zh_model():
+def load_zh_model(model):
     model = AutoModel(
-        model="/input/linyi/Models/speech_seaco_paraformer_large_asr_nat-zh-cn-16k-common-vocab8404-pytorch"
+        model=model,
     )
     return model
 
@@ -69,11 +66,11 @@ def process_one(hypo, truth):
     return (raw_truth, raw_hypo, wer, subs, dele, inse)
 
 
-def run_asr(wav_res_text_path, res_path):
+def run_asr(wav_res_text_path, res_path, whisper_path, paraformer_path):
     if lang == "en":
-        processor, model = load_en_model()
+        processor, model = load_en_model(model_id=whisper_path)
     elif lang == "zh":
-        model = load_zh_model()
+        model = load_zh_model(model=paraformer_path)
 
     params = []
     for line in open(wav_res_text_path).readlines():
@@ -87,10 +84,6 @@ def run_asr(wav_res_text_path, res_path):
             continue
         params.append((wav_res_path, text_ref, edited_text))
     fout = open(f"{res_path}.edited_label", "w")
-    fout_ = open(f"{res_path}.edited", "w")
-
-    n_higher_than_50 = 0
-    wers_below_50 = []
 
     # wer for audio and edited_text_label
     for wav_res_path, text_ref, edited_text in tqdm(params):
@@ -116,10 +109,6 @@ def run_asr(wav_res_text_path, res_path):
         raw_truth, raw_hypo, wer, subs, dele, inse = process_one(transcription, text_ref)
         fout.write(f"{wav_res_path}\t{wer}\t{raw_truth}\t{raw_hypo}\t{inse}\t{dele}\t{subs}\n")
         fout.flush()
-
-        raw_truth, raw_hypo, wer, subs, dele, inse = process_one(transcription, edited_text)
-        fout_.write(f"{wav_res_path}\t{wer}\t{raw_truth}\t{raw_hypo}\t{inse}\t{dele}\t{subs}\n")
-        fout_.flush()
 
 
 def run_wer(wav_res_text_path, res_path):
@@ -147,7 +136,7 @@ def run_wer(wav_res_text_path, res_path):
 
 
 if task == "asr":
-    run_asr(wav_res_text_path, res_path)
+    run_asr(wav_res_text_path, res_path, whisper_path, paraformer_path)
 elif task == "wer":
     run_wer(wav_res_text_path, res_path)
 else:

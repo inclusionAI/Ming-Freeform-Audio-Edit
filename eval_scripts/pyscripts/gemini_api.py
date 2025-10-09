@@ -1,6 +1,3 @@
-# Author: wanren
-# Email: wanren.pj@antgroup.com
-# Date: 2025/9/16
 import base64
 import copy
 import json
@@ -10,7 +7,7 @@ import requests
 
 
 class GeminiApi:
-    url = "https://matrixllm.alipay.com/v1/chat/completions"
+    url = # 请替换为实际的API URL
 
     headers = {
         "Content-Type": "application/json",

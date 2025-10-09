@@ -18,10 +18,13 @@ fi
 
 # you should give the ref and inf dirs
 inf_dir=$1
-ext=wav
-num_iter=$(echo "$inf_dir" | awk -F'/' '{print $(NF-4)}')
+primary_model=$2
+p808_model=$3
 
-echo "num_iter: $num_iter"
+ext=wav
+
+conda activate edit
+export LD_LIBRARY_PATH=""
 
 workdir=$(cd $(dirname $0); pwd)
 cd $workdir
@@ -45,8 +48,8 @@ for idx in $(seq ${nj}); do
         --nsplits ${nj} \
         --job ${idx} \
         --convert_to_torch ${gpu_inference} \
-        --primary_model ./dnsmos/sig_bak_ovr.onnx \
-        --p808_model ./dnsmos/model_v8.onnx
+        --primary_model ${primary_model} \
+        --p808_model ${p808_model}
 
 ) &
 pids+=($!) # store background pids
@@ -76,7 +79,6 @@ import os
 metrics = ["DNSMOS_OVRL", "DNSMOS_SIG", "DNSMOS_BAK"]
 # 用于存储每个指标最终平均值的字典
 mean_results = {}
-mean_results["iter"] = ${num_iter}
 # 遍历每个指标文件
 for metric in metrics:
     scores = []
@@ -110,12 +112,8 @@ for metric in metrics:
 # 定义输出 JSON 文件的路径
 output_json_path = f"${output_prefix}/scoring_dnsmos/RESULTS.jsonl"
 
-# 读取之前的jsonl文件
-if os.path.exists(output_json_path):
-    with open(output_json_path, "r") as f:
-        existing_data = [json.loads(line) for line in f]
-else:
-    existing_data = []
+
+existing_data = []
 
 # 将最新的结果添加到现有数据中
 existing_data.append(mean_results)

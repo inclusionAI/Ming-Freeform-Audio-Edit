@@ -10,7 +10,7 @@ from accelerate import Accelerator
 from loguru import logger
 from tqdm import tqdm
 
-API_URL = "https://matrixllm.alipay.com/v1/chat/completions"
+API_URL = #请替换为实际的API URL
 API_HEADERS = {
     "Content-Type": "application/json",
     # 你需要在环境变量中设置 Authorization
@@ -49,7 +49,7 @@ class Dialect_Evaluation:
         self.accelerator = Accelerator()
         logger.info(f"使用 Accelerator 在设备 {self.accelerator.device} 上加载模型...")
 
-        self.output_dir = f"{output_dir}/eval_result"
+        self.output_dir = output_dir
         if not os.path.exists(self.output_dir):
             os.makedirs(self.output_dir, exist_ok=True)
 
@@ -99,16 +99,7 @@ class Dialect_Evaluation:
             logger.error(f"API 调用失败: {e}")
             return f"API_ERROR: {e}"
 
-    def evaluate_from_folder(self, generated_audio_dir: str):
-        """
-        直接从一个包含已生成音频的文件夹计算评测指标，跳过模型推理步骤。
-        (已修改为流式写入，防止数据丢失)
-
-        Args:
-            testset_name (str): 要评测的测试集名称。
-            generated_audio_dir (str): 存放已生成 .wav 文件的目录路径。
-                                       文件名应与 uid 匹配 (e.g., "uid123.wav")。
-        """
+    def evaluate_from_folder(self, generated_audio_dir: str, meta_file: str):
         self.accelerator.wait_for_everyone()
         start_time = time.time()
 
@@ -121,14 +112,13 @@ class Dialect_Evaluation:
 
         # 加载数据集元数据
         data = []
-        with open("meta/dialect/dialect.jsonl", "r") as f:
+        with open(meta_file, "r") as f:
             for line in f:
                 data.append(json.loads(line.strip()))
 
         metrics = "api_judge"
 
-        # === 新增：为每个进程创建一个临时的结果文件 ===
-        # 使用 os.path.join 来确保路径的正确性
+        # 为每个进程创建一个临时的结果文件
         temp_result_file_path = os.path.join(
             eval_output_dir, f"temp_results_{self.accelerator.process_index}.jsonl"
         )
@@ -140,9 +130,8 @@ class Dialect_Evaluation:
 
         with self.accelerator.split_between_processes(data) as inputs:
             logger.info(f"进程 {self.accelerator.process_index} 正在处理 {len(inputs)} 个样本...")
-            # results = [] # 不再需要在内存中保存所有结果
 
-            # === 修改：以追加模式('a')打开临时文件 ===
+            # 以追加模式('a')打开临时文件
             with open(temp_result_file_path, "a", encoding="utf-8") as temp_f:
                 for item in tqdm(inputs, desc=f"Process {self.accelerator.process_index}"):
                     # 直接构造输出文件的路径，不再生成
@@ -175,17 +164,14 @@ class Dialect_Evaluation:
 
                     item["transcription"] = item.get("text", "")
 
-                    # === 修改：不再追加到列表，而是直接写入文件 ===
                     temp_f.write(json.dumps(item, ensure_ascii=False) + "\n")
 
         # 同步所有进程，确保所有临时文件都已写入完毕
         self.accelerator.wait_for_everyone()
 
-        # --- 修改：主进程负责合并所有临时文件并计算最终结果 ---
         if self.accelerator.is_main_process:
             logger.info("所有进程完成，主进程正在合并临时文件并汇总结果...")
 
-            # === 新增：从所有临时文件中读取结果 ===
             results_gathered = []
             for i in range(self.accelerator.num_processes):
                 proc_temp_file = os.path.join(eval_output_dir, f"temp_results_{i}.jsonl")
@@ -194,7 +180,7 @@ class Dialect_Evaluation:
                         for line in f:
                             if line.strip():
                                 results_gathered.append(json.loads(line.strip()))
-                    # 读取后可以删除临时文件，保持目录整洁
+
                     os.remove(proc_temp_file)
                 except FileNotFoundError:
                     logger.warning(f"找不到进程 {i} 的临时文件: {proc_temp_file}")
@@ -243,19 +229,23 @@ if __name__ == "__main__":
 
     parser = argparse.ArgumentParser()
     parser.add_argument(
-        "--output_dir",
+        "--res_dir",
         type=str,
-        default="/root/outputs",
-        help="保存评测结果的根目录",
+        help="保存评测结果的目录",
     )
     parser.add_argument(
         "--generated_audio_dir",
         type=str,
-        default="/root/speech-edit-dataset/eval_scripts/acoustic/api_wavs",
         help="存放已生成音频文件的目录路径",
     )
+    parser.add_argument(
+        "--meta_file",
+        type=str,
+        help="meta file 路径",
+    )
     args = parser.parse_args()
-    # 实例化并运行评测
-    evaluation = Dialect_Evaluation(output_dir=args.output_dir)
 
-    evaluation.evaluate_from_folder(generated_audio_dir=args.generated_audio_dir)
+    evaluation = Dialect_Evaluation(output_dir=args.res_dir)
+    evaluation.evaluate_from_folder(
+        generated_audio_dir=args.generated_audio_dir, meta_file=args.meta_file
+    )
