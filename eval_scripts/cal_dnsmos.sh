@@ -2,9 +2,9 @@
 nj=2  # Number of parallel CPU/GPU jobs for speedup
 python=python3
 
-if [ "$#" -ne 1 ]; then
-    echo "错误：需要提供两个参数。"
-    echo "用法: $0 <推理结果所在目录>"
+if [ "$#" -ne 3 ]; then
+    echo "错误：需要提供三个参数。"
+    echo "用法: $0 <推理结果所在目录> <primary_model路径> <p808_model路径>"
     exit 1
 fi
 

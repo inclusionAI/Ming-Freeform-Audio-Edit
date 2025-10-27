@@ -79,4 +79,4 @@ python pyscripts/ana_vol.py --wav_dir $eval_path/vol/vol_basic_${lang}/tts \
 #                                 --wav_dir $eval_path/emotion/emotion_basic_${lang}/tts
 
 # dnsmos for speech enhancement task
-# sh cal_dnsmos.sh $eval_path/denoise/dns_no_reverb/tts
+# sh cal_dnsmos.sh $eval_path/denoise/dns_no_reverb/tts /root/sig_bak_ovr.onnx /root/model_v8.onnx
